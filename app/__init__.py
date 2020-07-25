@@ -1,10 +1,8 @@
 from flask import Flask
-
-from config import Config
+from flask_pymongo import PyMongo
 
 app = Flask(__name__)
-app.debug = True
-app.config.from_object(Config)
-db = '' #place db object here
+app.config.from_object('wcm-sales.DevConfig')
+mongo = PyMongo(app)
 
 from app import routes, models, auth

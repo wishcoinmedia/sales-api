@@ -1,28 +1,36 @@
 from flask import request
 from flask_jwt import jwt_required, current_identity
-from app import app
+from app import app, mongo
 from app.models import User
 
-from app.auth import users
+import json
 
 # DEBUG route
 @app.route('/whoami')
 @jwt_required()
 def protected():
-    # use the user ID to make more DB calls
-    return '%s' % current_identity
+    user = mongo.db.users.find_one_or_404({"username": "wishcoin"})
+    return '{}\n{}'.format(current_identity, user)
 
 # Admin operations
 
-@app.route('/user', methods=['POST'])
+@app.route('/user', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
 def user():
     """Add a new user"""
     if current_identity.role != 'admin':
         return "Admin access required for this operation", 401
-    # Write to DB instead
-    users.append(User(len(users) + 1, request.json['username'], request.json['password'], request.json['role']))
-    return "User created successfuly", 200
+
+    if request.method == 'GET':
+        return json.dumps(dict(User.from_dict(mongo.db.users.find_one_or_404({'id': request.json['id']}))))
+    elif request.method == 'POST':
+        count = mongo.db.users.count({})
+        user = User(count+1, request.json['username'], request.json['password'], request.json['role'])
+        mongo.db.users.insert_one(dict(user))
+        return "User created successfuly", 200
+    elif request.method == 'DELETE':
+        mongo.db.users.find_one_and_delete({"id": request.json['id']})
+        return "User deleted successfuly", 200
 
 # User operations
 
@@ -30,5 +38,5 @@ def user():
 @jwt_required()
 def password():
     """Change a particular user's password"""
-    current_identity.password = request.json['password']
+    mongo.db.users.update_one({"id": current_identity.id}, {"$set": {"password": request.json['password']}})
     return "Password updated successfully", 200
