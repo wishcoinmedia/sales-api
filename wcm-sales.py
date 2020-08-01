@@ -9,13 +9,13 @@ load_dotenv(path.join(base_dir, '.env'))
 
 
 class Config(object):
-    """Base config."""
+    '''Base configuration.'''
     SECRET_KEY = environ.get('SECRET_KEY')
     STATIC_FOLDER = 'static'
 
 
 class ProdConfig(Config):
-    FLASK_ENV = 'production'
+    '''Production configuration.'''
     DEBUG = False
     TESTING = False
     DATABASE_URI = environ.get('PROD_DATABASE_URI')
@@ -24,7 +24,7 @@ class ProdConfig(Config):
     MONGO_URI = DATABASE_URI
 
 class DevConfig(Config):
-    FLASK_ENV = 'development'
+    '''Development configuration.'''
     DEBUG = True
     TESTING = True
     DATABASE_URI = environ.get('DEV_DATABASE_URI')
